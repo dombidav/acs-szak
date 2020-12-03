@@ -1,7 +1,5 @@
 <?php
 
-/** @var \Laravel\Lumen\Routing\Router $router */
-
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -13,6 +11,27 @@
 |
 */
 
+use Laravel\Lumen\Routing\Router;
+
+/** @var Router $router */
 $router->get('/', function () use ($router) {
     return $router->app->version();
+});
+
+// API route group
+$router->group(['prefix' => 'api'], function () use ($router) {
+    // Matches "/api/register
+    $router->post('register', 'AuthController@register');
+    // Matches "/api/login
+    $router->post('login', 'AuthController@login');
+
+    // Matches "/api/profile
+    $router->get('profile', 'UserController@profile');
+
+    // Matches "/api/users/1
+    //get one user by id
+    $router->get('user/{id}', 'UserController@show');
+
+    // Matches "/api/users
+    $router->get('user', 'UserController@index');
 });
