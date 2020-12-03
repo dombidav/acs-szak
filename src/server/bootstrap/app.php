@@ -76,9 +76,9 @@ $app->configure('app');
 //     App\Http\Middleware\ExampleMiddleware::class
 // ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+    'auth' => App\Http\Middleware\Authenticate::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -94,10 +94,32 @@ $app->configure('app');
 $app->register(App\Providers\AppServiceProvider::class);
 $app->register(App\Providers\AuthServiceProvider::class);
 $app->register(App\Providers\EventServiceProvider::class);
+
+$app->register(App\Providers\CustomValidationServiceProvider::class);
+
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+
 $app->register(Laravel\Tinker\TinkerServiceProvider::class);
+
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->configure('cors');
+
+/**
+ * |--------------------------------------------------------------------------
+ * | Add Class Aliases
+ * |--------------------------------------------------------------------------
+ */
+
+
+if (!class_exists('JWTAuth')) {
+    class_alias('Tymon\JWTAuth\Facades\JWTAuth', 'JWTAuth');
+}
+
+if (!class_exists('JWTFactory')) {
+    class_alias('Tymon\JWTAuth\Facades\JWTFactory', 'JWTFactory');
+}
+
 /*
 |--------------------------------------------------------------------------
 | Load The Application Routes
