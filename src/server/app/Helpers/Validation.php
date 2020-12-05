@@ -4,6 +4,7 @@
 namespace App\Helpers;
 
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -13,6 +14,14 @@ class Validation
     private $rules;
     /** @var Request $request */
     private $request;
+    /**
+     * @var JsonResponse
+     */
+    public $response;
+    /**
+     * @var bool
+     */
+    private $hasError = false;
 
     /**
      * Validation constructor.
@@ -35,11 +44,19 @@ class Validation
         try {
             Validator::make($this->request->all(), $this->rules);
             $temp = $call();
-            return response()->json($temp, 201);
+            $this->response = response()->json($temp, 201);
         } catch (Exception $exception) {
             $data['code'] = $exception->getCode();
             $data['message'] = $exception->getMessage();
-            return response()->json($data, 400);
+            $this->hasError = true;
+            $this->response = response()->json($data, 400);
         }
+        return $this;
+    }
+
+    public function Otherwise(callable  $call)
+    {
+        $temp = $call($this->response->getContent());
+        return $this;
     }
 }
