@@ -11,27 +11,25 @@
 |
 */
 
-use Laravel\Lumen\Routing\Router;
+use Laravel\Lumen\Routing\Router as DefaultRouter;
+use App\Helpers\RouteHelper as Router;
 
-/** @var Router $router */
+/** @var DefaultRouter $router */
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-// API route group
-$router->group(['prefix' => 'api'], function () use ($router) {
-    // Matches "/api/register
-    $router->post('register', 'AuthController@register');
-    // Matches "/api/login
-    $router->post('login', 'AuthController@login');
+Router::Auth(); // Add Auth routes only if needed
 
-    // Matches "/api/profile
-    $router->get('profile', 'UserController@profile');
+Router::PublicApi(function () use($router){
+    //Router::Get('/s/{id}')->As('ss')->Calls(\App\Http\Controllers\UserController::class, 'show');
+    $router->get('/something-public', function (){
+        return 'This is Public';
+    });
+});
 
-    // Matches "/api/users/1
-    //get one user by id
-    $router->get('user/{id}', 'UserController@show');
-
-    // Matches "/api/users
-    $router->get('user', 'UserController@index');
+Router::ProtectedApi(function () use ($router){
+    $router->get('/something-private', function (){
+        return 'This is Private';
+    });
 });

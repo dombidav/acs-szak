@@ -2,12 +2,16 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Str;
 use Laravel\Lumen\Routing\Router;
 
 class RouteHelper
 {
-    public static function Resource(Router $router, $resourceName)
+    public static function Resource($resourceName)
     {
+        $router = self::getRouter();
+        if(Str::contains($resourceName, '\\'))
+            $resourceName = Str::lower(Str::afterLast($resourceName, '\\'));
         $router->get($resourceName, [
             'as' => $resourceName . '.index',
             'uses' => ucfirst($resourceName) . 'Controller@index'
@@ -38,4 +42,61 @@ class RouteHelper
         ]);
     }
 
+    public static function getRouter(){
+        return app()->router;
+    }
+
+    public static function PublicApi(\Closure $param)
+    {
+        $router = self::getRouter();
+
+        $router->group(['prefix' => 'api'], function () use ($param){
+            $param();
+        });
+    }
+
+    public static function ProtectedApi(\Closure $param)
+    {
+        $router = self::getRouter();
+
+        $router->group(['prefix' => 'api', 'middleware' => 'auth'], function () use ($param){
+            $param();
+        });
+    }
+
+    public static function Auth()
+    {
+        if(env('USE_AUTH')){
+            $router = self::getRouter();
+
+            self::PublicApi(function () use ($router) {
+                $router->post('register', 'AuthController@register');
+                $router->post('login', 'AuthController@login');
+            });
+
+            self::ProtectedApi(function () use ($router) {
+                $router->get('profile', 'UserController@profile');
+            });
+        }
+    }
+
+    public static function Get(string $path)
+    {
+        return new RouteInstance('get', $path, self::getRouter());
+    }
+
+    public static function Put(string $path)
+    {
+        return new RouteInstance('put', $path, self::getRouter());
+    }
+
+    public static function Post(string $path)
+    {
+        return new RouteInstance('post', $path, self::getRouter());
+    }
+
+    public static function Delete(string $path)
+    {
+        return new RouteInstance('delete', $path, self::getRouter());
+    }
 }
