@@ -76,7 +76,8 @@ abstract class ApiResourceController extends Controller
             }
         $results = $result->get();
         $this->afterIndex($results);
-        LogHelper::Notify($this->model->getTable() . ' was accessed by ' . Auth::user()->name);
+        $user_name = Auth::check() ? Auth::user()->name : 'Guest';
+        LogHelper::Notify((new $this->model)->getTable() . ' was accessed by ' . $user_name);
         return response()->json($results, 200);
     }
 
@@ -108,10 +109,12 @@ abstract class ApiResourceController extends Controller
         $this->beforeShow($id);
         /** @var ResourceModel $temp */
         $temp = $this->find($id);
-        if ($temp)
+        if ($temp) {
+            $user_name = Auth::check() ? Auth::user()->name : 'Guest';
+            LogHelper::Notify((new $this->model)->getTable() . ' with id "' . $temp->getKey() . '" was accessed by ' . $user_name);
             return $temp;
+        }
         $this->afterShow($temp);
-        LogHelper::Notify($this->model->getTable() . ' with id "' . $temp->getKey() . '" was accessed by ' . Auth::user()->name);
         return response()->json('', 404);
     }
 

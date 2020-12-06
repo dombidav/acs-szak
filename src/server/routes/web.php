@@ -11,6 +11,7 @@
 |
 */
 
+use App\Models\Permission;
 use App\Models\User;
 use Laravel\Lumen\Routing\Router as DefaultRouter;
 use App\Helpers\RouteHelper as Router;
