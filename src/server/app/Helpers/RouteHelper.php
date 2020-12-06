@@ -10,8 +10,10 @@ class RouteHelper
     public static function Resource($resourceName)
     {
         $router = self::getRouter();
+
         if(Str::contains($resourceName, '\\'))
             $resourceName = Str::lower(Str::afterLast($resourceName, '\\'));
+
         $router->get($resourceName, [
             'as' => $resourceName . '.index',
             'uses' => ucfirst($resourceName) . 'Controller@index'
@@ -70,12 +72,26 @@ class RouteHelper
             $router = self::getRouter();
 
             self::PublicApi(function () use ($router) {
-                $router->post('register', 'AuthController@register');
-                $router->post('login', 'AuthController@login');
+                $router->post('register', [
+                    'as' => 'auth.register',
+                    'uses' => 'Authcontroller@register'
+                ]);
+                $router->post('login', [
+                    'as' => 'auth.login',
+                    'uses' => 'Authcontroller@login'
+                ]);
             });
 
             self::ProtectedApi(function () use ($router) {
-                $router->get('profile', 'UserController@profile');
+                $router->get('profile', [
+                    'as' => 'user.profile',
+                    'uses' => 'UserController@profile'
+                ]);
+
+                $router->post('logout', [
+                    'as' => 'auth.logout',
+                    'uses' => 'UserController@logout'
+                ]);
             });
         }
     }

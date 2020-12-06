@@ -11,6 +11,7 @@
 |
 */
 
+use App\Models\User;
 use Laravel\Lumen\Routing\Router as DefaultRouter;
 use App\Helpers\RouteHelper as Router;
 
@@ -32,4 +33,6 @@ Router::ProtectedApi(function () use ($router){
     $router->get('/something-private', function (){
         return 'This is Private';
     });
+
+    Router::Resource(User::class);
 });
