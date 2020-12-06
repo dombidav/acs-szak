@@ -1,7 +1,7 @@
 <?php
 
 
-namespace app\Helpers;
+namespace App\Helpers;
 
 
 use ReflectionClass;

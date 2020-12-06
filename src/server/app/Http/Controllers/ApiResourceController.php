@@ -4,7 +4,13 @@
 namespace App\Http\Controllers;
 
 
-use app\Helpers\LogHelper;
+use App\Events\CrudEvents\Successful\ResourceModelCreatedEvent;
+use App\Events\CrudEvents\Successful\ResourceModelUpdatedEvent;
+use App\Events\CrudEvents\Successful\ResourceModelDeletedEvent;
+use App\Events\CrudEvents\Failed\ResourceModelFailedToCreateEvent;
+use App\Events\CrudEvents\Failed\ResourceModelFailedToUpdateEvent;
+use App\Events\CrudEvents\Failed\ResourceModelFailedToDeleteEvent;
+use App\Helpers\LogHelper;
 use App\Helpers\Validation;
 use App\Models\ResourceModel;
 use Exception;
@@ -81,16 +87,16 @@ abstract class ApiResourceController extends Controller
     {
         $this->beforeStore();
         return Validation::Define($request, $this->rules)->Call(function () use ($request) {
-            /** @var Model $temp */
+            /** @var ResourceModel $temp */
             $temp = (new $this->model);
             foreach ($this->rules as $key => $value)
                 $temp->$key = $request->input($key);
             $temp->save();
             $this->afterStore($temp);
-            LogHelper::Notify('New ' . $this->model->getTable() . ' was created by ' . Auth::user()->name . ' with id "' . $temp->getKey() . '"');
+            event(new ResourceModelCreatedEvent($temp));
             return $temp;
         })->Otherwise(function ($error){
-            LogHelper::Error('New ' . $this->model->getTable() . ' was unsuccessfully created by ' . Auth::user()->name . ' error was "' . $error . '"');
+            event(new ResourceModelFailedToCreateEvent($error, (new $this->model)));
         })->response;
     }
 
@@ -118,17 +124,17 @@ abstract class ApiResourceController extends Controller
     {
         $this->beforeUpdate($id);
         $temp = $this->find($id);
-        /** @var Model $temp */
+        /** @var ResourceModel $temp */
         if ($temp)
             return Validation::Define($request, $this->rules)->Call(function () use ($temp, $request) {
-                $original = $temp->jsonSerialize();
+                $original = $temp;
                 foreach ($this->rules as $key => $value)
                     $temp->$key = $request->input($key);
                 $temp->save();
-                LogHelper::Notify($this->model->getTable() . ' with id "' . $temp->getKey() . '" was modified by ' . Auth::user()->name . 'Original: /"' . $original . '"/');
+                event(new ResourceModelUpdatedEvent($temp, $original));
                 return $temp;
             })->Otherwise(function ($error) use ($temp) {
-                LogHelper::Error($this->model->getTable() . ' with id "' . $temp->getKey() . '" was unsuccessfully modified by ' . Auth::user()->name . 'error was: /"' . $error . '"/');
+                event(new ResourceModelFailedToUpdateEvent($error, $temp));
             })->response;
         $this->afterUpdate($temp);
         return response()->json('', 404);
@@ -140,15 +146,16 @@ abstract class ApiResourceController extends Controller
     public function destroy($id)
     {
         $this->beforeDestroy($id);
-        /** @var Model $temp */
+        /** @var ResourceModel $temp */
         $temp = $this->find($id);
         if ($temp) {
             try {
+                $original = $temp;
                 $temp->delete();
-                LogHelper::Notify($this->model->getTable() . ' with id "' . $temp->getKey() . '" was deleted by ' . Auth::user()->name . 'Original: /"' . $temp->jsonSerialize() . '"/');
+                event(new ResourceModelDeletedEvent($original));
                 return response()->json($temp, 200);
             } catch (Exception $e) {
-                LogHelper::Error($this->model->getTable() . ' with id "' . $temp->getKey() . '" was unsuccessfully deleted by ' . Auth::user()->name . 'error was: /"' . $e->getMessage() . '"/');
+                event(new ResourceModelFailedToDeleteEvent($e, $temp));
                 return response()->json($e->getMessage(), $e->getCode());
             }
         }
