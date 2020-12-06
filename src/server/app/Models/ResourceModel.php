@@ -21,6 +21,7 @@ abstract class ResourceModel extends Model
 {
     use HasFactory, Uuid, CamelCasing;
 
+    public $usesLog = true;
     public $incrementing = false;
     protected $guarded = ['created_at', 'updated_at', 'uuid'];
 
@@ -51,13 +52,13 @@ abstract class ResourceModel extends Model
                 $a = null;
                 $rules = explode('|', $value);
                 switch ($rules[0]) {
-                    case 'int':
+                    case 'integer':
                         $a = $table->integer($key);
                         break;
-                    case 'bool':
+                    case 'boolean':
                         $a = $table->boolean($key);
                         break;
-                    case 'float':
+                    case 'numeric':
                         $a = $table->float($key);
                         break;
                     case 'timestamp':
@@ -103,6 +104,7 @@ abstract class ResourceModel extends Model
 
     /**
      * Defines the model
+     * Every field needs a type [integer, numeric, boolean, timestamp, string]. Default type is string.
      * @return array
      */
     protected abstract function definition();
